@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useTaskPanel } from '@/hooks/use-task-panel'
 
 interface TaskCardProps {
   task: TaskWithRelations
@@ -22,6 +23,7 @@ interface TaskCardProps {
 const MAX_LABELS_SHOWN = 3
 
 export function TaskCard({ task, isOverlay }: TaskCardProps) {
+  const { openTask } = useTaskPanel()
   const {
     attributes,
     listeners,
@@ -55,12 +57,19 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
 
   const hasFooter = hasDueDate || hasAssignee || commentCount > 0 || attachmentCount > 0 || subtaskTotal > 0
 
+  const handleClick = () => {
+    if (!isDragging && !isOverlay) {
+      openTask(task.id)
+    }
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
+      onClick={handleClick}
       className={cn(
         'group cursor-pointer rounded-lg border bg-background p-3 shadow-sm transition-shadow hover:shadow-md',
         isDragging && 'opacity-30',

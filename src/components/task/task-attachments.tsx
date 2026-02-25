@@ -1,0 +1,178 @@
+'use client'
+
+import { useState, useEffect, useTransition, useRef } from 'react'
+import { Button } from '@/components/ui/button'
+import { Paperclip, Upload, Trash2, FileIcon, Download } from 'lucide-react'
+import { createAttachment, deleteAttachment } from '@/lib/actions/attachment'
+import { createClient } from '@/utils/supabase/client'
+import type { Attachment } from '@/lib/types'
+
+interface TaskAttachmentsProps {
+  taskId: string
+  projectId: string
+}
+
+function formatFileSize(bytes: number | null): string {
+  if (!bytes) return ''
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+export function TaskAttachments({ taskId, projectId }: TaskAttachmentsProps) {
+  const [attachments, setAttachments] = useState<Attachment[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    async function fetchAttachments() {
+      const { data } = await supabase
+        .from('attachments')
+        .select('*')
+        .eq('task_id', taskId)
+        .order('created_at', { ascending: false })
+
+      if (data) setAttachments(data)
+    }
+
+    fetchAttachments()
+  }, [taskId])
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploading(true)
+    const supabase = createClient()
+
+    for (const file of Array.from(files)) {
+      const filePath = `${projectId}/${taskId}/${Date.now()}-${file.name}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('attachments')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        continue
+      }
+
+      const result = await createAttachment(
+        taskId,
+        file.name,
+        filePath,
+        file.size,
+        file.type
+      )
+
+      if (result.attachmentId) {
+        setAttachments((prev) => [
+          {
+            id: result.attachmentId!,
+            task_id: taskId,
+            comment_id: null,
+            uploaded_by: '',
+            file_name: file.name,
+            file_path: filePath,
+            file_size: file.size,
+            mime_type: file.type,
+            created_at: new Date().toISOString(),
+          },
+          ...prev,
+        ])
+      }
+    }
+
+    setUploading(false)
+    // Reset the file input
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleDelete = (attachment: Attachment) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== attachment.id))
+
+    startTransition(async () => {
+      await deleteAttachment(attachment.id, attachment.file_path)
+    })
+  }
+
+  const handleDownload = async (attachment: Attachment) => {
+    const supabase = createClient()
+    const { data } = await supabase.storage
+      .from('attachments')
+      .createSignedUrl(attachment.file_path, 60)
+
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, '_blank')
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Paperclip className="size-4 text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground">
+            Attachments
+          </span>
+        </div>
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={handleUpload}
+          />
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            <Upload className="size-3" />
+            {uploading ? 'Uploading...' : 'Upload'}
+          </Button>
+        </div>
+      </div>
+
+      {attachments.length > 0 && (
+        <div className="flex flex-col gap-1">
+          {attachments.map((attachment) => (
+            <div
+              key={attachment.id}
+              className="group flex items-center gap-2 rounded-md border px-2 py-1.5"
+            >
+              <FileIcon className="size-4 shrink-0 text-muted-foreground" />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm">{attachment.file_name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatFileSize(attachment.file_size)}
+                </span>
+              </div>
+              <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => handleDownload(attachment)}
+                >
+                  <Download className="size-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => handleDelete(attachment)}
+                >
+                  <Trash2 className="size-3 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

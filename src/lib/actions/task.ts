@@ -172,3 +172,80 @@ export async function deleteTask(
   revalidatePath('/', 'layout')
   return { success: true }
 }
+
+/**
+ * Create a subtask under a parent task.
+ */
+export async function createSubtask(
+  parentTaskId: string,
+  title: string,
+  projectId: string,
+  columnId: string
+): Promise<{ taskId?: string; error?: string }> {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'Not authenticated' }
+
+  // Find the last subtask to calculate position
+  const { data: lastSubtask } = await supabase
+    .from('tasks')
+    .select('position')
+    .eq('parent_task_id', parentTaskId)
+    .order('position', { ascending: false })
+    .limit(1)
+    .single()
+
+  const position = getPositionBetween(lastSubtask?.position ?? null, null)
+
+  const { data: task, error } = await supabase
+    .from('tasks')
+    .insert({
+      parent_task_id: parentTaskId,
+      project_id: projectId,
+      column_id: columnId,
+      title: title.trim(),
+      position,
+      created_by: user.id,
+    })
+    .select('id')
+    .single()
+
+  if (error || !task) return { error: error?.message ?? 'Failed to create subtask.' }
+
+  revalidatePath('/', 'layout')
+  return { taskId: task.id }
+}
+
+/**
+ * Toggle a subtask's completed state.
+ */
+export async function toggleSubtask(
+  id: string,
+  completed: boolean
+): Promise<{ error?: string; success?: boolean }> {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('tasks')
+    .update({
+      completed_at: completed ? new Date().toISOString() : null,
+    })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/', 'layout')
+  return { success: true }
+}

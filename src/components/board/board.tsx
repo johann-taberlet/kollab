@@ -5,8 +5,9 @@ import { BoardColumn } from './column'
 import { AddColumnInline } from './add-column-inline'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { TaskCard } from './task-card'
+import { TaskPanel } from '@/components/task/task-panel'
 import { useBoardDnd } from '@/hooks/use-board-dnd'
-import { useMemo } from 'react'
+import { useMemo, Suspense } from 'react'
 
 import {
   DndContext,
@@ -57,36 +58,43 @@ export function Board({ columns: initialColumns, projectId }: BoardProps) {
     : null
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-    >
-      <ScrollArea className="h-full">
-        <div className="flex h-full gap-4 p-6">
-          <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-            {columns.map((column) => (
-              <BoardColumn key={column.id} column={column} projectId={projectId} />
-            ))}
-          </SortableContext>
-          <AddColumnInline projectId={projectId} />
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-
-      {/* Drag Overlay — renders a ghost copy of the item being dragged */}
-      <DragOverlay dropAnimation={null}>
-        {activeTask ? (
-          <div className="w-[268px]">
-            <TaskCard task={activeTask} isOverlay />
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <ScrollArea className="h-full">
+          <div className="flex h-full gap-4 p-6">
+            <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+              {columns.map((column) => (
+                <BoardColumn key={column.id} column={column} projectId={projectId} />
+              ))}
+            </SortableContext>
+            <AddColumnInline projectId={projectId} />
           </div>
-        ) : null}
-        {activeColumn ? (
-          <BoardColumn column={activeColumn} projectId={projectId} isOverlay />
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+
+        {/* Drag Overlay — renders a ghost copy of the item being dragged */}
+        <DragOverlay dropAnimation={null}>
+          {activeTask ? (
+            <div className="w-[268px]">
+              <TaskCard task={activeTask} isOverlay />
+            </div>
+          ) : null}
+          {activeColumn ? (
+            <BoardColumn column={activeColumn} projectId={projectId} isOverlay />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+
+      {/* Task detail side panel — reads ?task= from URL */}
+      <Suspense fallback={null}>
+        <TaskPanel projectId={projectId} />
+      </Suspense>
+    </>
   )
 }
