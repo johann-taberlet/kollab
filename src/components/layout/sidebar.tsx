@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FolderKanban, CheckSquare, Bell } from 'lucide-react'
+import { FolderKanban, CheckSquare, Bell, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Profile, Organization } from '@/lib/types'
 import { OrgSwitcher } from '@/components/layout/org-switcher'
@@ -56,6 +56,15 @@ export function Sidebar({
       icon: Bell,
       badge: unreadCount,
     },
+    ...(currentOrgSlug
+      ? [
+          {
+            label: 'Settings',
+            href: `/${currentOrgSlug}/settings`,
+            icon: Settings,
+          },
+        ]
+      : []),
   ]
 
   function isActive(href: string): boolean {
