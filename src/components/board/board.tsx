@@ -7,6 +7,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { TaskCard } from './task-card'
 import { TaskPanel } from '@/components/task/task-panel'
 import { useBoardDnd } from '@/hooks/use-board-dnd'
+import { useBoardRealtime } from '@/hooks/use-board-realtime'
 import { useMemo, Suspense } from 'react'
 
 import {
@@ -28,6 +29,8 @@ interface BoardProps {
 }
 
 export function Board({ columns: initialColumns, projectId }: BoardProps) {
+  useBoardRealtime(projectId)
+
   const {
     columns,
     activeId,

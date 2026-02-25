@@ -9,6 +9,7 @@ import { OrgSwitcher } from '@/components/layout/org-switcher'
 import { UserMenu } from '@/components/layout/user-menu'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { useNotificationCount } from '@/hooks/use-notification-count'
 
 interface SidebarProps {
   profile: Profile
@@ -28,9 +29,10 @@ export function Sidebar({
   profile,
   orgs,
   currentOrgSlug: currentOrgSlugProp,
-  unreadCount = 0,
+  unreadCount: initialUnreadCount = 0,
 }: SidebarProps) {
   const pathname = usePathname()
+  const unreadCount = useNotificationCount(initialUnreadCount, profile.id)
 
   // Derive the current org slug from the pathname if not provided as a prop.
   // The first segment after "/" is the org slug when it matches one of the user's orgs.
