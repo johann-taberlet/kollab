@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useActionState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createOrganization } from '@/app/(app)/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,13 +23,19 @@ function slugify(text: string): string {
 }
 
 export default function OnboardingPage() {
+  const router = useRouter()
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [slugEdited, setSlugEdited] = useState(false)
   const [state, formAction, pending] = useActionState(
     async (_prevState: { error?: string } | null, formData: FormData) => {
       const result = await createOrganization(formData)
-      return result ?? null
+      if ('slug' in result) {
+        router.push(`/${result.slug}`)
+        router.refresh()
+        return null
+      }
+      return result
     },
     null
   )

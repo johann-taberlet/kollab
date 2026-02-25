@@ -12,7 +12,9 @@ export async function signOut() {
   redirect('/login')
 }
 
-export async function createOrganization(formData: FormData) {
+export async function createOrganization(
+  formData: FormData
+): Promise<{ error: string } | { slug: string }> {
   const cookieStore = await cookies()
   const supabase = createClient(cookieStore)
 
@@ -75,5 +77,5 @@ export async function createOrganization(formData: FormData) {
   }
 
   revalidatePath('/')
-  redirect(`/${slug}`)
+  return { slug }
 }

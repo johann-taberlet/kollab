@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
+import { CreateOrgDialog } from '@/components/org/create-org-dialog'
 
 interface OrgSwitcherProps {
   orgs: Organization[]
@@ -53,10 +54,14 @@ export function OrgSwitcher({ orgs, currentOrgSlug }: OrgSwitcherProps) {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push('/onboarding')}>
-          <Plus className="size-4" />
-          Create organization
-        </DropdownMenuItem>
+        <CreateOrgDialog
+          trigger={
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+              <Plus className="size-4" />
+              Create organization
+            </DropdownMenuItem>
+          }
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   )
