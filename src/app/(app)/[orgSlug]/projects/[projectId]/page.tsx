@@ -135,5 +135,5 @@ export default async function ProjectBoardPage({
     tasks: tasksByColumn[col.id] ?? [],
   }))
 
-  return <Board columns={columnsWithTasks} />
+  return <Board columns={columnsWithTasks} projectId={projectId} />
 }

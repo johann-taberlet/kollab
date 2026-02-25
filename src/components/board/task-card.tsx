@@ -10,14 +10,38 @@ import {
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 interface TaskCardProps {
   task: TaskWithRelations
+  /** When true, renders as a static card (e.g. for drag overlay) without sortable behavior. */
+  isOverlay?: boolean
 }
 
 const MAX_LABELS_SHOWN = 3
 
-export function TaskCard({ task }: TaskCardProps) {
+export function TaskCard({ task, isOverlay }: TaskCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    data: { type: 'task', task },
+    disabled: isOverlay,
+  })
+
+  const style = isOverlay
+    ? undefined
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }
+
   const hasLabels = task.labels.length > 0
   const hasDueDate = !!task.due_date
   const hasAssignee = !!task.assignee
@@ -32,7 +56,17 @@ export function TaskCard({ task }: TaskCardProps) {
   const hasFooter = hasDueDate || hasAssignee || commentCount > 0 || attachmentCount > 0 || subtaskTotal > 0
 
   return (
-    <div className="group cursor-pointer rounded-lg border bg-background p-3 shadow-sm transition-shadow hover:shadow-md">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={cn(
+        'group cursor-pointer rounded-lg border bg-background p-3 shadow-sm transition-shadow hover:shadow-md',
+        isDragging && 'opacity-30',
+        isOverlay && 'rotate-3 shadow-lg'
+      )}
+    >
       {/* Labels row */}
       {hasLabels && (
         <div className="mb-2 flex flex-wrap gap-1">
