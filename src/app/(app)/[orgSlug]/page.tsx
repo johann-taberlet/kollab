@@ -1,8 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { Plus, FolderKanban, Users } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { FolderKanban, Users } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { CreateProjectDialog } from '@/components/project/create-project-dialog'
 
 export default async function OrgDashboardPage({
   params,
@@ -63,10 +64,7 @@ export default async function OrgDashboardPage({
           <h1 className="text-2xl font-bold">{org.name}</h1>
           <p className="text-sm text-muted-foreground">Projects</p>
         </div>
-        <Button disabled>
-          <Plus className="mr-2 size-4" />
-          New project
-        </Button>
+        <CreateProjectDialog orgId={org.id} orgSlug={orgSlug} />
       </div>
 
       {(!projects || projects.length === 0) ? (
@@ -76,39 +74,41 @@ export default async function OrgDashboardPage({
           <p className="mb-4 text-sm text-muted-foreground">
             Create your first project to start organizing your work.
           </p>
-          <Button disabled>
-            <Plus className="mr-2 size-4" />
-            Create your first project
-          </Button>
+          <CreateProjectDialog orgId={org.id} orgSlug={orgSlug} />
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
-            <Card key={project.id} className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="size-3 rounded-full"
-                    style={{ backgroundColor: project.color }}
-                  />
-                  <CardTitle className="text-base">{project.name}</CardTitle>
-                </div>
-                {project.description && (
-                  <CardDescription className="line-clamp-2">
-                    {project.description}
-                  </CardDescription>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Users className="size-3" />
-                  <span>
-                    {memberCounts[project.id] ?? 0}{' '}
-                    {(memberCounts[project.id] ?? 0) === 1 ? 'member' : 'members'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+            <Link
+              key={project.id}
+              href={`/${orgSlug}/projects/${project.id}`}
+            >
+              <Card className="transition-shadow hover:shadow-md cursor-pointer">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="size-3 rounded-full"
+                      style={{ backgroundColor: project.color }}
+                    />
+                    <CardTitle className="text-base">{project.name}</CardTitle>
+                  </div>
+                  {project.description && (
+                    <CardDescription className="line-clamp-2">
+                      {project.description}
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Users className="size-3" />
+                    <span>
+                      {memberCounts[project.id] ?? 0}{' '}
+                      {(memberCounts[project.id] ?? 0) === 1 ? 'member' : 'members'}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

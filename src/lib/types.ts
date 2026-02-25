@@ -26,6 +26,8 @@ export type TaskWithRelations = Task & {
     attachments: number
     subtasks_completed: number
   }
+  /** Total number of subtasks (completed + incomplete) */
+  _subtaskTotal?: number
 }
 
 export type ColumnWithTasks = Column & {
