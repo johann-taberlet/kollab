@@ -20,6 +20,7 @@ import { TaskDescription } from './task-description'
 import { TaskSubtasks } from './task-subtasks'
 import { TaskCustomFields } from './task-custom-fields'
 import { TaskAttachments } from './task-attachments'
+import { CommentList } from './comment-list'
 import { createClient } from '@/utils/supabase/client'
 import { deleteTask } from '@/lib/actions/task'
 import type { Profile, Label } from '@/lib/types'
@@ -168,6 +169,10 @@ export function TaskPanel({ projectId }: TaskPanelProps) {
                 taskId={task.id}
                 projectId={projectId}
               />
+
+              <Separator />
+
+              <CommentList taskId={task.id} projectId={projectId} />
 
               <Separator />
 
