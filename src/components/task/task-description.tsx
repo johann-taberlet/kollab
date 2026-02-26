@@ -27,6 +27,7 @@ export function TaskDescription({ taskId, initialDescription }: TaskDescriptionP
   )
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
@@ -43,7 +44,7 @@ export function TaskDescription({ taskId, initialDescription }: TaskDescriptionP
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm dark:prose-invert max-w-none min-h-[80px] focus:outline-none px-0 py-2',
+          'prose prose-sm dark:prose-invert max-w-none min-h-[48px] focus:outline-none',
       },
     },
     onUpdate: ({ editor }) => {
@@ -54,11 +55,9 @@ export function TaskDescription({ taskId, initialDescription }: TaskDescriptionP
   if (!editor) return null
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <span className="text-xs font-medium text-muted-foreground">Description</span>
-      <div className="rounded-md border p-3 transition-colors focus-within:border-ring">
-        <EditorContent editor={editor} />
-      </div>
+      <EditorContent editor={editor} />
     </div>
   )
 }

@@ -46,15 +46,12 @@ export function TaskAssignee({
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  // Fetch project members when the popover opens
   useEffect(() => {
     if (!open) return
 
     const supabase = createClient()
 
     async function fetchMembers() {
-      // Get org members who can access this project
-      // Fetch project's org_id first, then org members
       const { data: project } = await supabase
         .from('projects')
         .select('org_id')
@@ -88,14 +85,14 @@ export function TaskAssignee({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs font-medium text-muted-foreground">Assignee</span>
+    <div className="flex min-h-8 items-center">
+      <span className="w-28 shrink-0 text-xs text-muted-foreground">Assignee</span>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 justify-start gap-2 px-2 font-normal"
+            className="h-7 justify-start gap-2 px-2 font-normal"
           >
             {assignee ? (
               <>
@@ -110,7 +107,7 @@ export function TaskAssignee({
             ) : (
               <>
                 <UserCircle className="size-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Unassigned</span>
+                <span className="text-sm text-muted-foreground">None</span>
               </>
             )}
           </Button>

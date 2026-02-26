@@ -43,14 +43,14 @@ export function TaskTitle({ taskId, initialTitle }: TaskTitleProps) {
         onBlur={save}
         onKeyDown={handleKeyDown}
         autoFocus
-        className="w-full border-none bg-transparent text-lg font-semibold outline-none focus:ring-0"
+        className="w-full border-none bg-transparent text-xl font-semibold tracking-tight outline-none focus:ring-0"
       />
     )
   }
 
   return (
     <h2
-      className="cursor-text text-lg font-semibold leading-tight"
+      className="cursor-text text-xl font-semibold leading-tight tracking-tight hover:text-foreground/80"
       onClick={() => setIsEditing(true)}
       role="button"
       tabIndex={0}

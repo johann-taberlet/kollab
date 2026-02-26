@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Plus, ListChecks } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { createSubtask, toggleSubtask, updateTask } from '@/lib/actions/task'
 import { createClient } from '@/utils/supabase/client'
 import { cn } from '@/lib/utils'
@@ -103,15 +103,9 @@ export function TaskSubtasks({ taskId, projectId, columnId }: TaskSubtasksProps)
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ListChecks className="size-4 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">Subtasks</span>
-        </div>
-        {subtasks.length > 0 && (
-          <span className="text-xs text-muted-foreground">
-            {completedCount} of {subtasks.length} completed
-          </span>
-        )}
+        <span className="text-xs font-medium text-muted-foreground">
+          Subtasks{subtasks.length > 0 && ` (${completedCount}/${subtasks.length})`}
+        </span>
       </div>
 
       {/* Progress bar */}

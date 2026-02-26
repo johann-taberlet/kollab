@@ -8,7 +8,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet'
-import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Trash2, Loader2 } from 'lucide-react'
 import { useTaskPanel } from '@/hooks/use-task-panel'
@@ -106,25 +105,27 @@ export function TaskPanel({ projectId }: TaskPanelProps) {
     <Sheet open={!!taskId} onOpenChange={(open) => !open && closeTask()}>
       <SheetContent
         side="right"
-        className="w-[600px] overflow-y-auto sm:max-w-[600px]"
+        className="w-[560px] overflow-y-auto p-0 sm:max-w-[560px]"
       >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Task details</SheetTitle>
+          <SheetDescription>View and edit task details</SheetDescription>
+        </SheetHeader>
+
         {loading ? (
           <div className="flex h-full items-center justify-center">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : task ? (
-          <>
-            <SheetHeader className="gap-0">
-              <SheetTitle className="sr-only">Task details</SheetTitle>
-              <SheetDescription className="sr-only">
-                View and edit task details
-              </SheetDescription>
+          <div className="flex flex-col">
+            {/* Title area */}
+            <div className="px-6 pt-6 pb-4">
               <TaskTitle taskId={task.id} initialTitle={task.title} />
-            </SheetHeader>
+            </div>
 
-            <div className="flex flex-col gap-5 pb-8">
-              {/* Metadata row */}
-              <div className="flex flex-wrap gap-4">
+            {/* Properties table */}
+            <div className="border-y bg-muted/30 px-6 py-3">
+              <div className="flex flex-col gap-0.5">
                 <TaskAssignee
                   taskId={task.id}
                   projectId={projectId}
@@ -135,62 +136,68 @@ export function TaskPanel({ projectId }: TaskPanelProps) {
                   dueDate={task.due_date}
                   completedAt={task.completed_at}
                 />
+                <TaskLabels
+                  taskId={task.id}
+                  projectId={projectId}
+                  initialLabels={task.labels}
+                />
+                <TaskCustomFields
+                  taskId={task.id}
+                  projectId={projectId}
+                />
               </div>
+            </div>
 
-              <TaskLabels
-                taskId={task.id}
-                projectId={projectId}
-                initialLabels={task.labels}
-              />
-
-              <TaskCustomFields
-                taskId={task.id}
-                projectId={projectId}
-              />
-
-              <Separator />
-
+            {/* Description */}
+            <div className="px-6 py-4">
               <TaskDescription
                 taskId={task.id}
                 initialDescription={task.description}
               />
+            </div>
 
-              <Separator />
+            <div className="mx-6 border-t" />
 
+            {/* Subtasks */}
+            <div className="px-6 py-4">
               <TaskSubtasks
                 taskId={task.id}
                 projectId={projectId}
                 columnId={task.column_id}
               />
+            </div>
 
-              <Separator />
+            <div className="mx-6 border-t" />
 
+            {/* Attachments */}
+            <div className="px-6 py-4">
               <TaskAttachments
                 taskId={task.id}
                 projectId={projectId}
               />
-
-              <Separator />
-
-              <CommentList taskId={task.id} projectId={projectId} />
-
-              <Separator />
-
-              {/* Delete task */}
-              <div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDelete}
-                  disabled={isPending}
-                  className="gap-2"
-                >
-                  <Trash2 className="size-3" />
-                  Delete task
-                </Button>
-              </div>
             </div>
-          </>
+
+            <div className="mx-6 border-t" />
+
+            {/* Comments */}
+            <div className="px-6 py-4">
+              <CommentList taskId={task.id} projectId={projectId} />
+            </div>
+
+            {/* Delete — subtle, at the very bottom */}
+            <div className="mt-auto border-t px-6 py-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDelete}
+                disabled={isPending}
+                className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="size-3" />
+                Delete task
+              </Button>
+            </div>
+          </div>
         ) : (
           <div className="flex h-full items-center justify-center">
             <p className="text-sm text-muted-foreground">Task not found</p>

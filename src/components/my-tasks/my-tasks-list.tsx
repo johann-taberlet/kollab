@@ -118,10 +118,17 @@ function TaskRow({ task }: { task: MyTaskItem }) {
 
   return (
     <li>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={handleClick}
-        className="flex w-full items-center gap-3 px-6 py-2.5 text-left transition-colors hover:bg-accent/50"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleClick()
+          }
+        }}
+        className="flex w-full cursor-pointer items-center gap-3 px-6 py-2.5 text-left transition-colors hover:bg-accent/50"
       >
         {/* Checkbox */}
         <button
@@ -175,7 +182,7 @@ function TaskRow({ task }: { task: MyTaskItem }) {
             {format(new Date(task.due_date!), 'MMM d')}
           </span>
         )}
-      </button>
+      </div>
     </li>
   )
 }

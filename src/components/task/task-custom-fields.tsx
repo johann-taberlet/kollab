@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Settings2 } from 'lucide-react'
 import { upsertCustomFieldValue } from '@/lib/actions/custom-field'
 import { createClient } from '@/utils/supabase/client'
 import type { CustomField } from '@/lib/types'
@@ -68,37 +67,31 @@ export function TaskCustomFields({ taskId, projectId }: TaskCustomFieldsProps) {
   if (fields.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <Settings2 className="size-4 text-muted-foreground" />
-        <span className="text-xs font-medium text-muted-foreground">Custom fields</span>
-      </div>
-      <div className="flex flex-col gap-2">
-        {fields.map((field) => (
-          <div key={field.id} className="flex items-center gap-3">
-            <span className="min-w-[100px] text-xs text-muted-foreground">
-              {field.name}
-            </span>
-            {field.type === 'text' ? (
-              <TextFieldInput
-                value={values[field.id] ?? ''}
-                onSave={(val) => handleSave(field.id, val || null)}
-              />
-            ) : field.type === 'select' ? (
-              <SelectFieldInput
-                value={values[field.id] ?? ''}
-                options={
-                  Array.isArray(field.options)
-                    ? (field.options as string[])
-                    : []
-                }
-                onSave={(val) => handleSave(field.id, val || null)}
-              />
-            ) : null}
-          </div>
-        ))}
-      </div>
-    </div>
+    <>
+      {fields.map((field) => (
+        <div key={field.id} className="flex min-h-8 items-center">
+          <span className="w-28 shrink-0 text-xs text-muted-foreground">
+            {field.name}
+          </span>
+          {field.type === 'text' ? (
+            <TextFieldInput
+              value={values[field.id] ?? ''}
+              onSave={(val) => handleSave(field.id, val || null)}
+            />
+          ) : field.type === 'select' ? (
+            <SelectFieldInput
+              value={values[field.id] ?? ''}
+              options={
+                Array.isArray(field.options)
+                  ? (field.options as string[])
+                  : []
+              }
+              onSave={(val) => handleSave(field.id, val || null)}
+            />
+          ) : null}
+        </div>
+      ))}
+    </>
   )
 }
 

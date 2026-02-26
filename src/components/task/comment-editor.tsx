@@ -31,6 +31,7 @@ function getInitials(name: string) {
 export function CommentEditor({ taskId, projectId, onCommentAdded }: CommentEditorProps) {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [empty, setEmpty] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
@@ -57,12 +58,13 @@ export function CommentEditor({ taskId, projectId, onCommentAdded }: CommentEdit
   const mentionSuggestion = createMentionSuggestion(projectId)
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: false,
       }),
       Placeholder.configure({
-        placeholder: 'Write a comment...',
+        placeholder: 'Write a comment... (Ctrl+Enter to send)',
       }),
       Mention.configure({
         HTMLAttributes: {
@@ -72,10 +74,13 @@ export function CommentEditor({ taskId, projectId, onCommentAdded }: CommentEdit
       }),
     ],
     content: '',
+    onUpdate: ({ editor: e }) => {
+      setEmpty(e.getText().trim().length === 0)
+    },
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm dark:prose-invert max-w-none min-h-[60px] focus:outline-none px-0 py-1',
+          'prose prose-sm dark:prose-invert max-w-none min-h-[48px] focus:outline-none px-0 py-1',
       },
       handleKeyDown: (_view, event) => {
         if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
@@ -88,14 +93,8 @@ export function CommentEditor({ taskId, projectId, onCommentAdded }: CommentEdit
     },
   })
 
-  const isEmpty = useCallback(() => {
-    if (!editor) return true
-    const text = editor.getText().trim()
-    return text.length === 0
-  }, [editor])
-
   const handleSubmit = useCallback(async () => {
-    if (!editor || isEmpty() || submitting) return
+    if (!editor || empty || submitting) return
 
     const content = editor.getHTML()
     setSubmitting(true)
@@ -104,34 +103,35 @@ export function CommentEditor({ taskId, projectId, onCommentAdded }: CommentEdit
 
     if (result.comment) {
       editor.commands.clearContent()
+      setEmpty(true)
       onCommentAdded?.(result.comment)
     }
 
     setSubmitting(false)
-  }, [editor, isEmpty, submitting, taskId, onCommentAdded])
+  }, [editor, empty, submitting, taskId, onCommentAdded])
 
   if (!editor) return null
 
   return (
     <div className="flex gap-3">
       {currentUser && (
-        <Avatar size="sm" className="mt-1 shrink-0">
+        <Avatar size="sm" className="mt-2 shrink-0">
           {currentUser.avatar_url && (
             <AvatarImage src={currentUser.avatar_url} alt={currentUser.full_name} />
           )}
           <AvatarFallback>{getInitials(currentUser.full_name)}</AvatarFallback>
         </Avatar>
       )}
-      <div className="flex flex-1 flex-col gap-2">
-        <div className="rounded-md border p-3 transition-colors focus-within:border-ring">
+      <div className="flex flex-1 flex-col gap-1.5">
+        <div className="rounded-lg border bg-muted/30 px-3 py-2 transition-colors focus-within:border-ring focus-within:bg-background">
           <EditorContent editor={editor} />
         </div>
         <div className="flex justify-end">
           <Button
             size="sm"
             onClick={handleSubmit}
-            disabled={isEmpty() || submitting}
-            className="gap-1.5"
+            disabled={empty || submitting}
+            className="h-7 gap-1.5 text-xs"
           >
             <Send className="size-3" />
             {submitting ? 'Sending...' : 'Comment'}

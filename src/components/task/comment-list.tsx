@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { MessageSquare, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { updateComment, deleteComment, type CommentWithAuthor } from '@/lib/actions/comment'
 import { createClient } from '@/utils/supabase/client'
 import { CommentEditor } from './comment-editor'
@@ -50,6 +50,7 @@ function CommentEditEditor({
   onCancel: () => void
 }) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({ heading: false }),
       Mention.configure({
@@ -250,9 +251,8 @@ export function CommentList({ taskId, projectId }: CommentListProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <MessageSquare className="size-4 text-muted-foreground" />
         <span className="text-xs font-medium text-muted-foreground">
-          Comments {comments.length > 0 && `(${comments.length})`}
+          Activity{comments.length > 0 && ` (${comments.length})`}
         </span>
       </div>
 

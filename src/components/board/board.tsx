@@ -8,7 +8,7 @@ import { TaskCard } from './task-card'
 import { TaskPanel } from '@/components/task/task-panel'
 import { useBoardDnd } from '@/hooks/use-board-dnd'
 import { useBoardRealtime } from '@/hooks/use-board-realtime'
-import { useMemo, Suspense } from 'react'
+import { useMemo, useId, Suspense } from 'react'
 
 import {
   DndContext,
@@ -41,6 +41,8 @@ export function Board({ columns: initialColumns, projectId }: BoardProps) {
     findTask,
   } = useBoardDnd(initialColumns)
 
+  const dndId = useId()
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -63,6 +65,7 @@ export function Board({ columns: initialColumns, projectId }: BoardProps) {
   return (
     <>
       <DndContext
+        id={dndId}
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}

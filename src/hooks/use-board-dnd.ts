@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import type {
   DragStartEvent,
   DragOverEvent,
@@ -22,11 +22,9 @@ export function useBoardDnd(initialColumns: ColumnWithTasks[]) {
   const snapshotRef = useRef<ColumnWithTasks[]>([])
 
   // Sync external column changes (e.g. after server revalidation)
-  const prevInitialRef = useRef(initialColumns)
-  if (prevInitialRef.current !== initialColumns) {
-    prevInitialRef.current = initialColumns
+  useEffect(() => {
     setColumns(initialColumns)
-  }
+  }, [initialColumns])
 
   // ---------- Helpers ----------
 
@@ -218,7 +216,9 @@ export function useBoardDnd(initialColumns: ColumnWithTasks[]) {
 
         // Persist after state is set — use a microtask so setColumns has flushed
         setTimeout(() => {
-          // Get the latest columns state
+          // Read latest state without side effects inside the updater
+          let pendingMove: { taskId: string; colId: string; position: number } | null = null
+
           setColumns((latestColumns) => {
             const col = latestColumns.find((c) => c.tasks.some((t) => t.id === taskId))
             if (!col) return latestColumns
@@ -229,14 +229,19 @@ export function useBoardDnd(initialColumns: ColumnWithTasks[]) {
               taskIndex < col.tasks.length - 1 ? col.tasks[taskIndex + 1].position : null
             const newPosition = getPositionBetween(before, after)
 
-            moveTask(taskId, col.id, newPosition).then((result) => {
+            pendingMove = { taskId, colId: col.id, position: newPosition }
+            return latestColumns
+          })
+
+          // Call server action outside the state updater
+          if (pendingMove) {
+            const { taskId: tid, colId, position } = pendingMove
+            moveTask(tid, colId, position).then((result) => {
               if (result.error) {
                 setColumns(snapshotRef.current)
               }
             })
-
-            return latestColumns
-          })
+          }
         }, 0)
       }
     },

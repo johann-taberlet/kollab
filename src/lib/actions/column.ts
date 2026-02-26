@@ -129,7 +129,7 @@ export async function moveColumn(
 }
 
 /**
- * Delete a column. Fails if the column still has tasks.
+ * Delete a column and all its tasks.
  */
 export async function deleteColumn(
   id: string
@@ -145,14 +145,14 @@ export async function deleteColumn(
     return { error: 'Not authenticated' }
   }
 
-  // Check if the column has any tasks
-  const { count } = await supabase
+  // Delete all tasks in the column first
+  const { error: tasksError } = await supabase
     .from('tasks')
-    .select('id', { count: 'exact', head: true })
+    .delete()
     .eq('column_id', id)
 
-  if (count && count > 0) {
-    return { error: 'Cannot delete a column that still has tasks. Move or delete tasks first.' }
+  if (tasksError) {
+    return { error: tasksError.message }
   }
 
   const { error } = await supabase.from('columns').delete().eq('id', id)

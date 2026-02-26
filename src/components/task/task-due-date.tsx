@@ -46,21 +46,21 @@ export function TaskDueDate({ taskId, dueDate: initialDueDate, completedAt }: Ta
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs font-medium text-muted-foreground">Due date</span>
+    <div className="flex min-h-8 items-center">
+      <span className="w-28 shrink-0 text-xs text-muted-foreground">Due date</span>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
             size="sm"
             className={cn(
-              'h-8 justify-start gap-2 px-2 font-normal',
+              'h-7 justify-start gap-2 px-2 font-normal',
               isOverdue && 'text-destructive'
             )}
           >
-            <Calendar className="size-4" />
+            <Calendar className="size-3.5" />
             <span className="text-sm">
-              {dueDate ? format(new Date(dueDate), 'MMM d, yyyy') : 'Add due date'}
+              {dueDate ? format(new Date(dueDate), 'MMM d, yyyy') : 'None'}
             </span>
           </Button>
         </PopoverTrigger>

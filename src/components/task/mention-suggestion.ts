@@ -62,7 +62,8 @@ export function createMentionSuggestion(
 
           popup = tippy('body', {
             getReferenceClientRect: props.clientRect as () => DOMRect,
-            appendTo: () => document.body,
+            appendTo: () =>
+              document.querySelector('[data-slot="sheet-content"]') ?? document.body,
             content: component.element,
             showOnCreate: true,
             interactive: true,

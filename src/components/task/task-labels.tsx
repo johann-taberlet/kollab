@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Tag, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { toggleTaskLabel, createLabel } from '@/lib/actions/label'
 import { createClient } from '@/utils/supabase/client'
 import type { Label } from '@/lib/types'
@@ -35,7 +35,6 @@ export function TaskLabels({ taskId, projectId, initialLabels }: TaskLabelsProps
   const [newColor, setNewColor] = useState(PRESET_COLORS[0])
   const [isPending, startTransition] = useTransition()
 
-  // Fetch all project labels when popover opens
   useEffect(() => {
     if (!open) return
 
@@ -66,6 +65,8 @@ export function TaskLabels({ taskId, projectId, initialLabels }: TaskLabelsProps
       setSelectedLabels((prev) => prev.filter((l) => l.id !== label.id))
     }
 
+    setOpen(false)
+
     startTransition(async () => {
       await toggleTaskLabel(taskId, label.id, attach)
     })
@@ -84,23 +85,42 @@ export function TaskLabels({ taskId, projectId, initialLabels }: TaskLabelsProps
           color: newColor,
         }
         setAllLabels((prev) => [...prev, newLabel])
-        // Also select the new label
         setSelectedLabels((prev) => [...prev, newLabel])
         await toggleTaskLabel(taskId, result.labelId, true)
       }
       setNewName('')
       setIsCreating(false)
+      setOpen(false)
     })
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground">Labels</span>
+    <div className="flex min-h-8 items-start">
+      <span className="mt-1.5 w-28 shrink-0 text-xs text-muted-foreground">Labels</span>
+      <div className="flex flex-wrap items-center gap-1">
+        {selectedLabels.map((label) => (
+          <Badge
+            key={label.id}
+            variant="secondary"
+            className="h-6 gap-1 text-xs font-normal"
+          >
+            <span
+              className="size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: label.color }}
+            />
+            {label.name}
+          </Badge>
+        ))}
+
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon-xs">
-              <Tag className="size-3" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 gap-1 px-1.5 text-xs text-muted-foreground"
+            >
+              <Plus className="size-3" />
+              {selectedLabels.length === 0 && 'Add'}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64 p-2" align="start">
@@ -109,10 +129,18 @@ export function TaskLabels({ taskId, projectId, initialLabels }: TaskLabelsProps
                 Project labels
               </p>
               {allLabels.map((label) => (
-                <button
+                <div
                   key={label.id}
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+                  role="button"
+                  tabIndex={0}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
                   onClick={() => handleToggle(label)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleToggle(label)
+                    }
+                  }}
                 >
                   <Checkbox
                     checked={isSelected(label.id)}
@@ -123,7 +151,7 @@ export function TaskLabels({ taskId, projectId, initialLabels }: TaskLabelsProps
                     style={{ backgroundColor: label.color }}
                   />
                   <span className="truncate">{label.name}</span>
-                </button>
+                </div>
               ))}
 
               {isCreating ? (
@@ -181,20 +209,6 @@ export function TaskLabels({ taskId, projectId, initialLabels }: TaskLabelsProps
           </PopoverContent>
         </Popover>
       </div>
-
-      {selectedLabels.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {selectedLabels.map((label) => (
-            <Badge
-              key={label.id}
-              className="text-white"
-              style={{ backgroundColor: label.color }}
-            >
-              {label.name}
-            </Badge>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

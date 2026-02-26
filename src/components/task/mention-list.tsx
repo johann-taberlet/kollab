@@ -17,7 +17,7 @@ export interface MentionItem {
 
 interface MentionListProps {
   items: MentionItem[]
-  command: (item: MentionItem) => void
+  command: (item: { id: string; label: string }) => void
 }
 
 export interface MentionListRef {
@@ -60,7 +60,7 @@ export const MentionList = forwardRef<MentionListRef, MentionListProps>(
         if (event.key === 'Enter') {
           const item = items[selectedIndex]
           if (item) {
-            command(item)
+            command({ id: item.id, label: item.full_name })
           }
           return true
         }
@@ -88,7 +88,7 @@ export const MentionList = forwardRef<MentionListRef, MentionListProps>(
                 ? 'bg-accent text-accent-foreground'
                 : 'hover:bg-accent/50'
             }`}
-            onClick={() => command(item)}
+            onClick={() => command({ id: item.id, label: item.full_name })}
             onMouseEnter={() => setSelectedIndex(index)}
           >
             <Avatar size="sm">

@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useTransition, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Paperclip, Upload, Trash2, FileIcon, Download } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Upload, Trash2, FileIcon } from 'lucide-react'
 import { createAttachment, deleteAttachment } from '@/lib/actions/attachment'
 import { createClient } from '@/utils/supabase/client'
 import type { Attachment } from '@/lib/types'
@@ -22,6 +30,7 @@ function formatFileSize(bytes: number | null): string {
 export function TaskAttachments({ taskId, projectId }: TaskAttachmentsProps) {
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [uploading, setUploading] = useState(false)
+  const [deleting, setDeleting] = useState<Attachment | null>(null)
   const [isPending, startTransition] = useTransition()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -87,11 +96,13 @@ export function TaskAttachments({ taskId, projectId }: TaskAttachmentsProps) {
     }
 
     setUploading(false)
-    // Reset the file input
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const handleDelete = (attachment: Attachment) => {
+  const handleConfirmDelete = () => {
+    if (!deleting) return
+    const attachment = deleting
+    setDeleting(null)
     setAttachments((prev) => prev.filter((a) => a.id !== attachment.id))
 
     startTransition(async () => {
@@ -99,11 +110,11 @@ export function TaskAttachments({ taskId, projectId }: TaskAttachmentsProps) {
     })
   }
 
-  const handleDownload = async (attachment: Attachment) => {
+  const handleOpen = async (attachment: Attachment) => {
     const supabase = createClient()
     const { data } = await supabase.storage
       .from('attachments')
-      .createSignedUrl(attachment.file_path, 60)
+      .createSignedUrl(attachment.file_path, 300)
 
     if (data?.signedUrl) {
       window.open(data.signedUrl, '_blank')
@@ -113,12 +124,9 @@ export function TaskAttachments({ taskId, projectId }: TaskAttachmentsProps) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Paperclip className="size-4 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">
-            Attachments
-          </span>
-        </div>
+        <span className="text-xs font-medium text-muted-foreground">
+          Attachments{attachments.length > 0 && ` (${attachments.length})`}
+        </span>
         <div>
           <input
             ref={fileInputRef}
@@ -144,35 +152,52 @@ export function TaskAttachments({ taskId, projectId }: TaskAttachmentsProps) {
           {attachments.map((attachment) => (
             <div
               key={attachment.id}
-              className="group flex items-center gap-2 rounded-md border px-2 py-1.5"
+              className="group flex items-center gap-2 rounded-md border px-2 py-1.5 transition-colors hover:bg-muted/50"
             >
               <FileIcon className="size-4 shrink-0 text-muted-foreground" />
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm">{attachment.file_name}</span>
+              <button
+                className="flex min-w-0 flex-1 cursor-pointer flex-col text-left"
+                onClick={() => handleOpen(attachment)}
+              >
+                <span className="truncate text-sm hover:underline">
+                  {attachment.file_name}
+                </span>
                 <span className="text-xs text-muted-foreground">
                   {formatFileSize(attachment.file_size)}
                 </span>
-              </div>
-              <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => handleDownload(attachment)}
-                >
-                  <Download className="size-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => handleDelete(attachment)}
-                >
-                  <Trash2 className="size-3 text-destructive" />
-                </Button>
-              </div>
+              </button>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={() => setDeleting(attachment)}
+              >
+                <Trash2 className="size-3 text-destructive" />
+              </Button>
             </div>
           ))}
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleting} onOpenChange={(open) => !open && setDeleting(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete attachment</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{deleting?.file_name}&rdquo;? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleting(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
